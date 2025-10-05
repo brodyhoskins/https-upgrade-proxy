@@ -24,6 +24,11 @@ func ProxyHandler(writer http.ResponseWriter, request *http.Request) {
 	fmt.Print(time.Now().Format("2006-01-02 15:04:05"), " ", host)
 
 	if request.Method == http.MethodGet {
+		if OCSP(host) {
+			pass(writer, request)
+			return
+		}
+
 		ctx, cancel := context.WithTimeout(request.Context(), 5*time.Second)
 		defer cancel()
 
