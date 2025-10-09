@@ -12,8 +12,6 @@ var ocspHosts = []string{
 }
 
 func OCSP(host string) bool {
-	host = strings.ToLower(host)
-
 	if strings.HasPrefix(host, "ocsp.") {
 		ps, ok := publicsuffix.PublicSuffix(host)
 		if ok && strings.HasSuffix(host, ps) {
