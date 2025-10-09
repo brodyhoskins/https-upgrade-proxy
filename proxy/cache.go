@@ -30,15 +30,21 @@ func FetchFromCache(host string) *cacheEntry {
 	return nil
 }
 
-func PushToCache(host string, https bool, expires time.Time) bool {
+func PushToCache(host string, https bool, expiresAt time.Time) {
 	cacheMu.Lock()
 	defer cacheMu.Unlock()
 
-	cache[strings.ToLower(host)] = &cacheEntry{
-		created: time.Now(),
-		expires: expires,
-		host:    host,
-		https:   https,
+	key := strings.ToLower(host)
+	if entry, ok := cache[key]; ok {
+		entry.https = https
+		entry.expires = expiresAt
+		return
 	}
-	return true
+
+	cache[key] = &cacheEntry{
+		https:   https,
+		host:    host,
+		expires: expiresAt,
+		created: time.Now(),
+	}
 }

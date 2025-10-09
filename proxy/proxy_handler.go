@@ -38,7 +38,7 @@ func ProxyHandler(writer http.ResponseWriter, request *http.Request) {
 		go func() {
 			cacheEntry := FetchFromCache(host)
 			if cacheEntry != nil && cacheEntry.https {
-				results <- checkResult{true, cacheEntry.expires} // lowercase
+				results <- checkResult{true, cacheEntry.expires}
 			} else {
 				results <- checkResult{false, time.Time{}}
 			}
@@ -55,7 +55,7 @@ func ProxyHandler(writer http.ResponseWriter, request *http.Request) {
 		}()
 
 		go func() {
-			hstsHeader, expiresAt := HSTSHeader(host) // Only 2 values
+			hstsHeader, expiresAt := HSTSHeader(host)
 			results <- checkResult{hstsHeader, expiresAt}
 		}()
 
@@ -66,7 +66,7 @@ func ProxyHandler(writer http.ResponseWriter, request *http.Request) {
 			case r := <-results:
 				if r.useHTTPS {
 					chosen = r
-					cancel() // cancel other checks
+					cancel()
 					goto Redirect
 				}
 			case <-timeout:
