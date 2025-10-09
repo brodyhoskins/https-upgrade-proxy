@@ -82,7 +82,7 @@ func ProxyHandler(writer http.ResponseWriter, request *http.Request) {
 
 	Redirect:
 		PushToCache(host, true, chosen.expiration)
-		redirect(writer, request, chosen.expiration)
+		redirect(writer, request, host)
 		return
 	}
 
@@ -119,18 +119,25 @@ func pass(writer http.ResponseWriter, request *http.Request) {
 	io.Copy(writer, resp.Body)
 }
 
-func redirect(writer http.ResponseWriter, request *http.Request, expiresAt time.Time) {
+func redirect(writer http.ResponseWriter, request *http.Request, host string) {
 	fmt.Println(": Use HTTPS")
 
 	target := "https://" + request.Host + request.URL.RequestURI()
 
-	maxAge := int(time.Until(expiresAt).Seconds())
+	cacheEntry := FetchFromCache(host)
+	if cacheEntry == nil {
+		http.Redirect(writer, request, target, http.StatusMovedPermanently)
+		return
+	}
+
+	maxAge := int(cacheEntry.expires.Sub(cacheEntry.created).Seconds())
 	if maxAge < 0 {
 		maxAge = 0
 	}
 
-	writer.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", maxAge))
-	writer.Header().Set("Expires", expiresAt.UTC().Format(http.TimeFormat))
+	writer.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", maxAge))
+	writer.Header().Set("Date", cacheEntry.created.UTC().Format(http.TimeFormat))
+	writer.Header().Set("Expires", cacheEntry.expires.UTC().Format(http.TimeFormat))
 
 	http.Redirect(writer, request, target, http.StatusMovedPermanently)
 }

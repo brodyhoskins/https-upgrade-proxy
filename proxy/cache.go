@@ -7,6 +7,7 @@ import (
 )
 
 type cacheEntry struct {
+	created time.Time
 	expires time.Time
 	host    string
 	https   bool
@@ -21,7 +22,8 @@ func FetchFromCache(host string) *cacheEntry {
 	cacheMu.RLock()
 	defer cacheMu.RUnlock()
 
-	if entry, ok := cache[strings.ToLower(host)]; ok && entry.expires.After(time.Now()) {
+	key := strings.ToLower(host)
+	if entry, ok := cache[key]; ok && entry.expires.After(time.Now()) {
 		return entry
 	}
 
@@ -33,6 +35,7 @@ func PushToCache(host string, https bool, expires time.Time) bool {
 	defer cacheMu.Unlock()
 
 	cache[strings.ToLower(host)] = &cacheEntry{
+		created: time.Now(),
 		expires: expires,
 		host:    host,
 		https:   https,
