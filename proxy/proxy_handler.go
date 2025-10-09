@@ -17,6 +17,7 @@ type checkResult struct {
 
 func ProxyHandler(writer http.ResponseWriter, request *http.Request) {
 	host := request.Host
+	host = strings.ToLower(host)
 	if strings.Contains(host, ":") {
 		host, _, _ = net.SplitHostPort(host)
 	}
@@ -24,7 +25,7 @@ func ProxyHandler(writer http.ResponseWriter, request *http.Request) {
 	fmt.Print(time.Now().Format("2006-01-02 15:04:05"), " ", host)
 
 	if request.Method == http.MethodGet {
-		if OCSP(host) {
+		if CaptivePortal(host) || OCSP(host) {
 			pass(writer, request)
 			return
 		}
